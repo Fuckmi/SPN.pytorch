@@ -7,8 +7,8 @@ import torch
 import torch.nn as nn
 from copy import deepcopy
 from experiment.engine import MultiLabelMAPEngine
-from experiment.models import vgg16_sp
 from experiment.voc import Voc2007Classification
+from models import WSLDetPipe
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
@@ -49,8 +49,10 @@ def main_voc2007():
     num_classes = 20
 
     # load model
-    model = vgg16_sp(num_classes, pretrained=True)
-    
+    # model = vgg16_sp(num_classes, pretrained=True)
+    model = WSLDetPipe(pretrained=True, num_classes=num_classes, num_maps=512, num_boxes=32,
+                       img_size=(int(args.batch_size), 3, int(args.image_size), int(args.image_size)),
+                       feat_size=(int(args.batch_size), 512, 14, 14))
     print(model)
 
     criterion = nn.MultiLabelSoftMarginLoss()

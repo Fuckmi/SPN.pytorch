@@ -1,3 +1,4 @@
+from __future__ import division
 import os
 import re
 import math
@@ -8,7 +9,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 from torch.autograd import Variable
-from urllib.request import urlretrieve
+from urllib import urlretrieve
 
 import experiment.models as models
 from evaluation.SP_GoogLeNet import SP_GoogLeNet
@@ -125,8 +126,8 @@ class AveragePrecisionMeter(object):
                 pos_count += 1
             total_count += 1
             if label == 1:
-                precision_at_i += pos_count / total_count
-        precision_at_i /= pos_count
+                precision_at_i += pos_count / float(total_count)
+        precision_at_i /= float(pos_count)
         return precision_at_i
 
 # load ground truth
@@ -197,7 +198,7 @@ def load_ground_truth_imagenet(data_root):
     return ground_truth
 
 def load_image_voc(image_name):
-    image_raw = Image.open(image_name).convert("RGB") 
+    image_raw = Image.open(image_name).convert("RGB")
     image_normalized = torch.from_numpy(np.array(image_raw)).permute(2, 0, 1).cuda().float()
     image_normalized = image_normalized.index_select(0, torch.LongTensor([2,1,0]).cuda())   
     image_normalized = (image_normalized - torch.Tensor([103.939, 116.779, 123.68]).cuda().view(3, 1, 1))
@@ -269,13 +270,14 @@ def corloc(pred_boxes, ground_truth):
         for cidx in cls_inds[0]:
             pred = cls_pred_boxes[cls_pred_boxes[:,0]==cidx,2:6]
             if len(pred) > 0:
-                gt = cls_gt_bboxes[cls_gt_bboxes[:,0]==cidx,2:]                
+                gt = cls_gt_bboxes[cls_gt_bboxes[:,0]==cidx,2:]
                 if max(ious(pred, gt)) >= 0.5:
                     cor += 1
-        class_corloc.append(cor/len(cls_inds[0]))   
+        class_corloc.append(cor/len(cls_inds[0]))
     return sum(class_corloc)/len(class_corloc)
 
 def locerr(pred_boxes, ground_truth):
+    # calculate locerr
     gt_bboxes = ground_truth['gt_bboxes']
     err = 0
     for idx in range(len(ground_truth['image_list'])):
